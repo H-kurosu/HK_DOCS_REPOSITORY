@@ -17,11 +17,11 @@
 | 出力形式     | CSV or Excel   | **同等**   |
 | 情報取得項目(カラム)数     | XXX  | **同等**   |
 | Webからの情報取得率     | 推定 99%   | **同等** (☆)|
-| 取得した情報のカラムへの転記ミス率     | 推定 5 % | **同等** (☆) |
-| 取得の運用費／年     | 現状は運用無し  | **YMSLI 200万円前後** | 
+| 取得した情報のカラムへの転記ミス率<br>(名寄せミス)| 推定 5 % | **同等** (☆) |
+| 取得の運用費／年     | 現状は運用無し  | **YMSLI 200万円前後** (☆☆)| 
 
-(☆) 重要な指標
-ROI = (利益 ÷ 投資額) × 100
+(☆) 重要な指標  
+(☆☆) ROI = (利益 ÷ 投資額) × 100
 
 ---
 
@@ -35,7 +35,7 @@ ROI = (利益 ÷ 投資額) × 100
 6. Excelを部門内のシェアポイントに配置＆共有
 7. 状況によっては、共有依頼が来た際はそのファイルを共有
 
-&emsp;&emsp;(1~2を外部ベンダーに依頼している場合は、YMCで内容精査作業が発生)
+  (1~2を外部ベンダーに依頼している場合は、YMCで内容精査作業が発生)
 
 > **問題**: 手間・漏れ・更新遅延・属人化
 
@@ -107,3 +107,106 @@ ROI = (利益 ÷ 投資額) × 100
 10. 受け入れ基準 & テスト計画  
 
 ---
+
+# E1. Purpose and KPI (Business Requirements)
+
+### 1.1 Background and Issues
+- In departments such as Planning G and PT (*1), information is manually collected from competitor websites. By automating this process, approximately **1,000 hours** of annual work within YMC can be reduced.
+- Reduce errors and omissions caused by copy & paste to near zero, improving quality.
+(*1) Currently confirming whether this can be promoted to other departments as well.
+
+### 1.2 Target Indicators
+
+| Indicator                | Current     | Target Value      |
+|--------------------------|-------------|-------------------|
+| Annual data collection time | 1,000 hours | **Basically 0 min** |
+| Data collection frequency/year | 1 time | **1 time/month** |
+| Number of target sites   | 45 sites    | **45 sites**      |
+| Output format            | CSV or Excel| **Equivalent**    |
+| Number of data columns   | XXX         | **Equivalent**    |
+| Data acquisition rate from web | Estimated 99% | **Equivalent** (☆)|
+| Data entry error rate (name matching errors) | Estimated 5% | **Equivalent** (☆) |
+| Annual operation cost    | No current operation | **Around 2 million yen for YMSLI** (☆☆)|
+
+(☆) Important indicator  
+(☆☆) ROI = (Profit ÷ Investment) × 100
+
+---
+
+# E2. Current Operations (As-Is)
+
+1. Prepare previously collected Excel files for 45 reference websites; assigned staff circulate and register them.
+2. Select a target site and search for the information of the columns to be collected.
+3. Check and manually transfer the desired columns (e.g., total length, engine specifications, color, etc.) from the website.
+4. Investigate all columns for one site.
+5. After finishing one site, move to the next, and repeat for all 45 sites.
+6. Place and share the Excel file on the department's SharePoint.
+7. If requested, share the file as needed.
+
+  (If steps 1~2 are outsourced to an external vendor, YMC performs content verification.)
+
+> **Issues**: Labor, omissions, update delays, dependence on individuals
+
+---
+
+# E3. Future State (To-Be) Functional Requirements
+
+### 3.1 Crawling Functions
+- **Target URL Management**: Add/edit via browser UI
+- **Scheduler**: Execute daily at 06:00 (Cron format)
+- **Dynamic Page Support**: Extract HTML after JS rendering using Selenium/Playwright
+- **Extraction Logic**: Specify CSS selectors or use ML auto-detection
+- **Duplicate Detection**: Exclude already acquired data using URL + hash
+- **Output**: JSON → PostgreSQL → BI tool integration
+
+### 3.2 Management and Operation Functions
+- Job result dashboard (success/failure/difference count)
+- Retry & alert (Slack/Teams)
+- Retain crawler execution logs for 90 days
+
+---
+
+# E4. Non-Functional Requirements
+
+| Category    | Example Requirement                                    |
+|-------------|-------------------------------------------------------|
+| Performance | Complete within 5 seconds per site, 10 minutes for all sites |
+| Availability| Success rate of 99% or higher for 06:00 weekday runs   |
+| Security    | Communication via TLS1.2 or higher, data stored with AES-256 encryption |
+| Scalability | No performance degradation even if 5 sites are added per month |
+| Operation & Maintenance | No-code configuration changes and log viewing possible |
+
+---
+
+# E5. Constraints, Risks & Compliance
+
+1. **Compliance with robots.txt** (Do not crawl Disallow paths, specify User-Agent)
+2. **Check and obtain necessary permissions for copyright and terms of use**
+3. **Internal network constraints** (Proxy/FW whitelist registration)
+4. **Prohibition of acquiring personal or confidential information**
+
+---
+
+# E6. Acceptance Criteria (Test Perspectives)
+
+| Test Type    | Example Pass Criteria |
+|--------------|----------------------|
+| Functional Test | Accurate extraction and DB storage for all 10 sites |
+| Load Test    | CPU usage below 70% when running 3 jobs simultaneously |
+| Failure Test | Even if 1 site returns 404, the remaining 9 sites complete normally |
+| Security     | No vulnerabilities corresponding to OWASP Top 10 detected |
+
+---
+
+# E7. Example Document Structure (Template)
+
+1. Cover & version control
+2. Project overview & background
+3. Stakeholders & RACI
+4. Glossary
+5. As-Is business flow
+6. To-Be functional requirements list (with CRUD matrix)
+7. Non-functional requirements matrix
+8. Constraints & assumptions
+9. Risk register & countermeasures
+10. Acceptance criteria & test plan
